@@ -1,0 +1,35 @@
+{
+	"name": "r2-videostream",
+	"version": "1.0.0",
+	"description": "Video processing service with HLS streaming and Cloudflare R2 storage",
+	"main": "server.js",
+	"scripts": {
+		"start": "node server.js",
+		"dev": "nodemon server.js"
+	},
+	"keywords": [
+		"video",
+		"streaming",
+		"hls",
+		"ffmpeg",
+		"cloudflare",
+		"r2"
+	],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.x",
+		"better-sqlite3": "^11.5.0",
+		"dotenv": "^16.x",
+		"express": "^4.x",
+		"express-fileupload": "^1.5.1",
+		"express-session": "^1.18.1",
+		"fluent-ffmpeg": "^2.x",
+		"multer": "^1.x",
+		"socket.io": "^4.8.1",
+		"sqlite3": "^5.1.7"
+	},
+	"devDependencies": {
+		"nodemon": "^3.1.7"
+	}
+}
