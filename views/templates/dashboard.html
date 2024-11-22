@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard - Video Streaming Platform</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <h2>Welcome, {{username}}</h2>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="upload-section">
+            <h3>Upload New Video</h3>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="video">Select Video:</label>
+                    <input type="file" id="video" name="video" accept="video/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="title">Video Title:</label>
+                    <input type="text" id="title" name="title" placeholder="Enter video title" required>
+                </div>
+                <button type="submit">Upload Video</button>
+            </form>
+
+            <div id="progressContainer" class="progress-container hidden">
+                <h4>Upload Progress</h4>
+                <div class="progress-bar">
+                    <div id="uploadProgress" class="progress"></div>
+                </div>
+                <p id="uploadStatus" class="status">0%</p>
+            </div>
+        </div>
+
+        <div class="video-list">
+            <h3>Your Videos</h3>
+            {{#each videos}}
+            <div class="video-item" id="video-{{video_id}}">
+                <div class="video-header">
+                    <h4>{{title}}</h4>
+                    <span class="upload-date">{{formatDate created_at}}</span>
+                </div>
+
+                <div class="video-content">
+                    <div class="video-player" id="player-{{video_id}}"></div>
+
+                    <div class="video-info">
+                        <p class="status">Status: {{status}}</p>
+                        {{#if completed}}
+                        <div class="streams">
+                            <div class="stream-controls">
+                                <button
+                                    onclick="showVideoPlayer('{{lookup (lookup streams 3) 'url'}}', 'player-{{video_id}}')"
+                                    class="play-btn">
+                                    Play Video
+                                </button>
+                                <select onchange="showVideoPlayer(this.value, 'player-{{video_id}}')"
+                                    class="quality-select">
+                                    <option value="{{lookup (lookup streams 3) 'url'}}">Auto (Adaptive)</option>
+                                    <option value="{{lookup (lookup streams 2) 'url'}}">720p</option>
+                                    <option value="{{lookup (lookup streams 1) 'url'}}">480p</option>
+                                    <option value="{{lookup (lookup streams 0) 'url'}}">360p</option>
+                                </select>
+                            </div>
+                            <div class="stream-links">
+                                <h5>Direct Stream URLs:</h5>
+                                {{#each streams}}
+                                <div class="stream-item">
+                                    <strong>{{resolution}}:</strong>
+                                    <a href="{{url}}" target="_blank" class="stream-link">
+                                        {{#if (eq resolution "master")}}
+                                        Master Playlist (Adaptive)
+                                        {{else}}
+                                        {{resolution}} Quality
+                                        {{/if}}
+                                    </a>
+                                </div>
+                                {{/each}}
+                            </div>
+                        </div>
+                        {{else}}
+                        <div class="progress-bar">
+                            <div class="progress" style="width: {{progress}}%"></div>
+                        </div>
+                        <p class="progress-text">{{progress}}%</p>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+            {{else}}
+            <div class="no-videos">
+                <p>You haven't uploaded any videos yet. Start by uploading your first video above!</p>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/upload.js"></script>
+    <script src="/js/player.js"></script>
+    <script>
+        authenticateSocket('{{userId}}');
+    </script>
+</body>
+
+</html>

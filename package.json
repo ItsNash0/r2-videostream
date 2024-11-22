@@ -23,6 +23,7 @@
 		"dotenv": "^16.x",
 		"express": "^4.x",
 		"express-fileupload": "^1.5.1",
+		"express-handlebars": "^8.0.1",
 		"express-session": "^1.18.1",
 		"fluent-ffmpeg": "^2.x",
 		"multer": "^1.x",

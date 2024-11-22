@@ -7,6 +7,7 @@ const path = require("path")
 const http = require("http")
 const { Server } = require("socket.io")
 const session = require("express-session")
+const exphbs = require("express-handlebars")
 const db = require("./database")
 require("dotenv").config()
 
@@ -14,6 +15,33 @@ const app = express()
 const server = http.createServer(app)
 const io = new Server(server)
 const port = 3000
+
+// Configure Handlebars
+const hbs = exphbs.create({
+	defaultLayout: false,
+	extname: ".html",
+	helpers: {
+		eq: function (a, b) {
+			return a === b
+		},
+		formatDate: function (date) {
+			return new Date(date).toLocaleDateString("en-US", {
+				year: "numeric",
+				month: "long",
+				day: "numeric",
+				hour: "2-digit",
+				minute: "2-digit",
+			})
+		},
+	},
+})
+
+app.engine("html", hbs.engine)
+app.set("view engine", "html")
+app.set("views", path.join(__dirname, "views/templates"))
+
+// Serve static files
+app.use(express.static(path.join(__dirname, "views")))
 
 // Session middleware
 app.use(
@@ -186,51 +214,7 @@ app.get("/login", (req, res) => {
 		return res.redirect("/")
 	}
 
-	res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Login</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }
-                .form-group {
-                    margin-bottom: 15px;
-                }
-                input {
-                    padding: 8px;
-                    width: 100%;
-                    max-width: 300px;
-                }
-                button {
-                    padding: 8px 16px;
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                }
-                button:hover {
-                    background-color: #45a049;
-                }
-            </style>
-        </head>
-        <body>
-            <h2>Login</h2>
-            <form action="/login" method="post">
-                <div class="form-group">
-                    <label for="username">Username:</label><br>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <button type="submit">Login</button>
-            </form>
-        </body>
-        </html>
-    `)
+	res.render("login")
 })
 
 app.post("/login", (req, res) => {
@@ -257,217 +241,17 @@ app.get("/logout", (req, res) => {
 // Main application routes
 app.get("/", requireAuth, (req, res) => {
 	const videos = db.getUserVideos(req.session.userId)
+	const processedVideos = videos.map((video) => ({
+		...video,
+		completed: video.status === "completed",
+		streams: video.streams ? JSON.parse(video.streams) : null,
+	}))
 
-	res.send(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Video Upload</title>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    padding: 20px;
-                }
-                .header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 20px;
-                }
-                .progress-container {
-                    margin-top: 20px;
-                }
-                .progress-bar {
-                    background-color: #f0f0f0;
-                    border-radius: 4px;
-                    padding: 2px;
-                    margin: 10px 0;
-                }
-                .progress {
-                    background-color: #4CAF50;
-                    height: 20px;
-                    border-radius: 4px;
-                    width: 0%;
-                    transition: width 0.3s ease-in-out;
-                }
-                .status {
-                    margin-top: 20px;
-                }
-                .video-list {
-                    margin-top: 30px;
-                }
-                .video-item {
-                    border: 1px solid #ddd;
-                    padding: 15px;
-                    margin-bottom: 15px;
-                    border-radius: 4px;
-                }
-                .hidden {
-                    display: none;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <h2>Welcome, ${req.user.username}</h2>
-                <a href="/logout">Logout</a>
-            </div>
-
-            <form id="uploadForm">
-                <input type="file" name="video" accept="video/*" required>
-                <input type="text" name="title" placeholder="Video title" required>
-                <button type="submit">Upload</button>
-            </form>
-            
-            <div id="progressContainer" class="progress-container hidden">
-                <h3>Upload Progress</h3>
-                <div class="progress-bar">
-                    <div id="uploadProgress" class="progress"></div>
-                </div>
-                <p id="uploadStatus">0%</p>
-            </div>
-
-            <div class="video-list">
-                <h3>Your Videos</h3>
-                ${videos
-					.map(
-						(video) => `
-                    <div class="video-item" id="video-${video.video_id}">
-                        <h4>${video.title}</h4>
-                        <p>Status: ${video.status}</p>
-                        ${
-							video.status === "completed" && video.streams
-								? `<div class="streams">
-                                ${JSON.parse(video.streams)
-									.map(
-										(stream) =>
-											`<p><strong>${stream.resolution}:</strong> 
-                                    <a href="${stream.url}" target="_blank">${stream.url}</a></p>`
-									)
-									.join("")}
-                               </div>`
-								: `<div class="progress-bar">
-                                <div class="progress" style="width: ${video.progress}%"></div>
-                               </div>
-                               <p class="progress-text">${video.progress}%</p>`
-						}
-                    </div>
-                `
-					)
-					.join("")}
-            </div>
-
-            <script src="/socket.io/socket.io.js"></script>
-            <script>
-                const socket = io();
-                const chunkSize = 1024 * 1024; // 1MB chunks
-                
-                socket.on('connect', () => {
-                    socket.emit('authenticate', '${req.session.userId}');
-                });
-
-                const uploadForm = document.getElementById('uploadForm');
-                const progressContainer = document.getElementById('progressContainer');
-                const uploadProgress = document.getElementById('uploadProgress');
-                const uploadStatus = document.getElementById('uploadStatus');
-
-                async function uploadChunk(file, start, videoId) {
-                    const chunk = file.slice(start, start + chunkSize);
-                    const formData = new FormData();
-                    formData.append('chunk', chunk);
-                    formData.append('start', start);
-                    formData.append('videoId', videoId);
-                    formData.append('total', file.size);
-
-                    const response = await fetch('/upload-chunk', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Upload failed');
-                    }
-
-                    return response.json();
-                }
-
-                async function uploadFile(file, title) {
-                    const videoId = Date.now().toString();
-                    let start = 0;
-                    
-                    progressContainer.classList.remove('hidden');
-                    
-                    // Initialize upload
-                    const initResponse = await fetch('/init-upload', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            filename: file.name,
-                            title: title,
-                            size: file.size,
-                            videoId: videoId
-                        })
-                    });
-
-                    if (!initResponse.ok) {
-                        throw new Error('Failed to initialize upload');
-                    }
-
-                    while (start < file.size) {
-                        await uploadChunk(file, start, videoId);
-                        start += chunkSize;
-                        
-                        const progress = Math.min((start / file.size) * 100, 100);
-                        uploadProgress.style.width = progress + '%';
-                        uploadStatus.textContent = Math.round(progress) + '%';
-                    }
-
-                    return videoId;
-                }
-
-                uploadForm.onsubmit = async (e) => {
-                    e.preventDefault();
-                    
-                    const file = uploadForm.video.files[0];
-                    const title = uploadForm.title.value;
-                    
-                    try {
-                        await uploadFile(file, title);
-                        window.location.reload();
-                    } catch (error) {
-                        alert('Error: ' + error.message);
-                    }
-                };
-
-                socket.on('processingProgress', (data) => {
-                    const videoContainer = document.getElementById('video-' + data.videoId);
-                    if (videoContainer) {
-                        const progressBar = videoContainer.querySelector('.progress');
-                        const progressText = videoContainer.querySelector('.progress-text');
-                        if (progressBar && progressText) {
-                            progressBar.style.width = data.percent + '%';
-                            progressText.textContent = data.percent + '%';
-                        }
-                    }
-                });
-
-                socket.on('uploadProgress', (data) => {
-                    const videoContainer = document.getElementById('video-' + data.videoId);
-                    if (videoContainer) {
-                        const status = videoContainer.querySelector('p');
-                        if (status) {
-                            status.textContent = 'Status: Uploading ' + data.key;
-                        }
-                    }
-                });
-            </script>
-        </body>
-        </html>
-    `)
+	res.render("dashboard", {
+		username: req.user.username,
+		userId: req.user.id,
+		videos: processedVideos,
+	})
 })
 
 // Chunked upload routes
