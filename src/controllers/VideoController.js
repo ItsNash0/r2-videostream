@@ -8,7 +8,6 @@ const config = require("../config")
 
 class VideoController {
 	constructor() {
-		// Ensure uploads directories exist
 		this.createRequiredDirectories()
 	}
 
@@ -58,7 +57,8 @@ class VideoController {
 				await videoProcessingService.processVideo(
 					inputPath,
 					outputDir,
-					videoId
+					videoId,
+					progress
 				)
 
 			// Upload to R2 or store locally
@@ -66,7 +66,8 @@ class VideoController {
 			const publicUrl = await storageService.uploadDirectory(
 				hlsDir,
 				r2Prefix,
-				videoId
+				videoId,
+				progress
 			)
 
 			// Clean up temporary files

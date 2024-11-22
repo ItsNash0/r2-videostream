@@ -8,7 +8,6 @@ class StorageService {
 	constructor() {
 		if (config.r2.isConfigured) {
 			try {
-				// Create HTTPS agent with modern TLS configuration
 				const agent = new https.Agent({
 					keepAlive: true,
 					maxSockets: 50,
@@ -52,27 +51,69 @@ class StorageService {
 		}
 	}
 
-	async uploadDirectory(dirPath, prefix, videoId) {
+	async uploadDirectory(dirPath, prefix, videoId, progress) {
 		try {
-			// If R2 is not configured or client initialization failed, use local storage
 			if (!this.client) {
 				console.log("Using local storage for upload")
-				return this.storeLocally(dirPath, prefix)
+				return this.storeLocally(dirPath, prefix, progress)
 			}
 
 			console.log(`Starting upload to R2: ${prefix}`)
 			const files = await this.getAllFiles(dirPath)
 			console.log(`Found ${files.length} files to upload`)
 
+			let uploadedFiles = 0
+			const totalFiles = files.length
+
 			for (const filePath of files) {
 				const relativePath = path.relative(dirPath, filePath)
 				const key = path.join(prefix, relativePath).replace(/\\/g, "/")
 				const content = await fs.readFile(filePath)
 				const contentType = this.getContentType(filePath)
+				const fileSize = (await fs.stat(filePath)).size
 
 				try {
 					console.log(`Uploading ${key} to R2...`)
+
+					// Emit upload start event
+					if (progress) {
+						progress.onProgress("upload", {
+							status: "uploading",
+							file: path.basename(filePath),
+							progress: Math.round(
+								(uploadedFiles / totalFiles) * 100
+							),
+							totalFiles,
+							uploadedFiles,
+							currentFile: {
+								name: path.basename(filePath),
+								size: fileSize,
+								type: contentType,
+							},
+						})
+					}
+
 					await this.uploadFile(key, content, contentType)
+					uploadedFiles++
+
+					// Emit upload progress event
+					if (progress) {
+						progress.onProgress("upload", {
+							status: "uploading",
+							file: path.basename(filePath),
+							progress: Math.round(
+								(uploadedFiles / totalFiles) * 100
+							),
+							totalFiles,
+							uploadedFiles,
+							currentFile: {
+								name: path.basename(filePath),
+								size: fileSize,
+								type: contentType,
+							},
+						})
+					}
+
 					console.log(`Successfully uploaded ${key}`)
 				} catch (error) {
 					console.error(
@@ -81,8 +122,18 @@ class StorageService {
 						"\nStack:",
 						error.stack
 					)
-					return this.storeLocally(dirPath, prefix)
+					return this.storeLocally(dirPath, prefix, progress)
 				}
+			}
+
+			// Emit upload complete event
+			if (progress) {
+				progress.onProgress("upload", {
+					status: "completed",
+					progress: 100,
+					totalFiles,
+					uploadedFiles,
+				})
 			}
 
 			console.log(`Upload to R2 completed successfully: ${prefix}`)
@@ -94,25 +145,61 @@ class StorageService {
 				"\nStack:",
 				error.stack
 			)
-			// Fall back to local storage on any error
-			return this.storeLocally(dirPath, prefix)
+			return this.storeLocally(dirPath, prefix, progress)
 		}
 	}
 
-	async storeLocally(dirPath, prefix) {
+	async storeLocally(dirPath, prefix, progress) {
 		console.log(`Storing files locally: ${prefix}`)
 		const publicDir = path.join(__dirname, "..", "public", "uploads")
 		const targetDir = path.join(publicDir, prefix)
 
 		try {
-			// Create public/uploads directory if it doesn't exist
 			await fs.mkdir(publicDir, { recursive: true })
 
-			// Copy the directory to public/uploads
-			await this.copyDirectory(dirPath, targetDir)
+			const files = await this.getAllFiles(dirPath)
+			let copiedFiles = 0
+			const totalFiles = files.length
+
+			for (const filePath of files) {
+				const relativePath = path.relative(dirPath, filePath)
+				const destPath = path.join(targetDir, relativePath)
+				const destDir = path.dirname(destPath)
+				const fileSize = (await fs.stat(filePath)).size
+
+				await fs.mkdir(destDir, { recursive: true })
+				await fs.copyFile(filePath, destPath)
+
+				copiedFiles++
+
+				// Emit local storage progress
+				if (progress) {
+					progress.onProgress("upload", {
+						status: "copying",
+						file: path.basename(filePath),
+						progress: Math.round((copiedFiles / totalFiles) * 100),
+						totalFiles,
+						copiedFiles,
+						currentFile: {
+							name: path.basename(filePath),
+							size: fileSize,
+							type: this.getContentType(filePath),
+						},
+					})
+				}
+			}
+
+			// Emit completion event
+			if (progress) {
+				progress.onProgress("upload", {
+					status: "completed",
+					progress: 100,
+					totalFiles,
+					copiedFiles,
+				})
+			}
 
 			console.log(`Local storage completed: ${prefix}`)
-			// Return local URL
 			return `/uploads/${prefix}`
 		} catch (error) {
 			console.error(
@@ -142,22 +229,6 @@ class StorageService {
 		} catch (error) {
 			console.error(`R2 upload error for ${key}:`, error.message)
 			throw error
-		}
-	}
-
-	async copyDirectory(src, dest) {
-		await fs.mkdir(dest, { recursive: true })
-		const entries = await fs.readdir(src, { withFileTypes: true })
-
-		for (const entry of entries) {
-			const srcPath = path.join(src, entry.name)
-			const destPath = path.join(dest, entry.name)
-
-			if (entry.isDirectory()) {
-				await this.copyDirectory(srcPath, destPath)
-			} else {
-				await fs.copyFile(srcPath, destPath)
-			}
 		}
 	}
 
