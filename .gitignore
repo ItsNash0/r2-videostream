@@ -1,4 +1,5 @@
 /.DS_Store
+/database.sqlite
 /.env
 /chunks
 /node_modules
