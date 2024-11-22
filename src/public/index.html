@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Processor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-form {
+            margin-bottom: 20px;
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-stage {
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .stage-name {
+            font-weight: bold;
+        }
+
+        .stage-status {
+            color: #666;
+        }
+
+        .result {
+            margin-top: 20px;
+            display: none;
+            padding: 20px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+        }
+
+        .error {
+            color: #f44336;
+            margin-top: 10px;
+            display: none;
+            padding: 10px;
+            background-color: #fff2f2;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .video-container {
+            margin-top: 20px;
+            max-width: 100%;
+        }
+
+        pre {
+            background-color: #f1f1f1;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .completed {
+            background-color: #4CAF50;
+        }
+
+        .processing {
+            background-color: #2196F3;
+            background-image: linear-gradient(45deg,
+                    rgba(255, 255, 255, .15) 25%,
+                    transparent 25%,
+                    transparent 50%,
+                    rgba(255, 255, 255, .15) 50%,
+                    rgba(255, 255, 255, .15) 75%,
+                    transparent 75%,
+                    transparent);
+            background-size: 1rem 1rem;
+            animation: progress-bar-stripes 1s linear infinite;
+        }
+
+        @keyframes progress-bar-stripes {
+            0% {
+                background-position: 1rem 0;
+            }
+
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+        .error .progress {
+            background-color: #f44336;
+        }
+
+        .copy-button {
+            background-color: #2196F3;
+            margin-left: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+
+        .url-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .url-text {
+            word-break: break-all;
+            flex: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Video Processor</h1>
+        <div class="upload-form">
+            <input type="file" id="videoFile" accept="video/*" />
+            <button id="uploadBtn">Upload Video</button>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <h3>Processing Status</h3>
+            <div class="progress-stage" id="analysisStage">
+                <div class="progress-label">
+                    <span class="stage-name">Video Analysis</span>
+                    <span class="stage-status">Waiting...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+            <div class="progress-stage" id="transcodingStage">
+                <div class="progress-label">
+                    <span class="stage-name">Transcoding</span>
+                    <span class="stage-status">Waiting...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+            <div class="progress-stage" id="playlistStage">
+                <div class="progress-label">
+                    <span class="stage-name">Playlist Generation</span>
+                    <span class="stage-status">Waiting...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+            <div class="progress-stage" id="uploadStage">
+                <div class="progress-label">
+                    <span class="stage-name">File Upload</span>
+                    <span class="stage-status">Waiting...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="error" id="errorContainer"></div>
+
+        <div class="result" id="resultContainer">
+            <h3>Results</h3>
+            <div>
+                <strong>HLS Playlist URL:</strong>
+                <div class="url-container">
+                    <span id="playlistUrl" class="url-text"></span>
+                    <button class="copy-button" onclick="copyToClipboard('playlistUrl')">Copy</button>
+                </div>
+            </div>
+            <div>
+                <strong>Embed Code:</strong>
+                <div class="url-container">
+                    <pre id="embedCode"></pre>
+                    <button class="copy-button" onclick="copyToClipboard('embedCode')">Copy</button>
+                </div>
+            </div>
+            <div class="video-container" id="videoContainer"></div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const uploadBtn = document.getElementById('uploadBtn');
+        const videoFile = document.getElementById('videoFile');
+        const progressContainer = document.getElementById('progressContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const errorContainer = document.getElementById('errorContainer');
+        const playlistUrl = document.getElementById('playlistUrl');
+        const embedCode = document.getElementById('embedCode');
+        const videoContainer = document.getElementById('videoContainer');
+
+        const stages = ['analysis', 'transcoding', 'playlist', 'upload'];
+        let currentVideoId = null;
+
+        async function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.tagName === 'PRE' ? element.textContent : element.innerText;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                const button = element.nextElementSibling;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+        }
+
+        function updateStageProgress(stageId, status, progress) {
+            const stage = document.getElementById(`${stageId}Stage`);
+            const progressBar = stage.querySelector('.progress');
+            const statusEl = stage.querySelector('.stage-status');
+
+            progressBar.style.width = `${progress}%`;
+            progressBar.className = `progress ${status}`;
+
+            let statusText = 'Waiting...';
+            if (status === 'processing') {
+                statusText = `${progress}%`;
+                progressBar.classList.add('processing');
+            } else if (status === 'completed') {
+                statusText = 'Completed';
+                progressBar.classList.add('completed');
+            } else if (status === 'error') {
+                statusText = 'Error';
+                progressBar.classList.add('error');
+            }
+
+            statusEl.textContent = statusText;
+        }
+
+        function resetProgress() {
+            stages.forEach(stage => {
+                updateStageProgress(stage, 'waiting', 0);
+            });
+            progressContainer.style.display = 'block';
+            resultContainer.style.display = 'none';
+            errorContainer.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+
+        function showResult(data) {
+            playlistUrl.textContent = data.masterPlaylistUrl;
+            embedCode.textContent = data.embedCode;
+            videoContainer.innerHTML = data.embedCode;
+            resultContainer.style.display = 'block';
+            uploadBtn.disabled = false;
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!videoFile.files[0]) {
+                showError('Please select a video file');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', videoFile.files[0]);
+
+            try {
+                uploadBtn.disabled = true;
+                resetProgress();
+
+                const response = await fetch('/api/videos/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.details || 'Upload failed');
+                }
+
+                const data = await response.json();
+                currentVideoId = data.videoId;
+
+                // Connect to Socket.IO for progress updates
+                const socket = io();
+
+                socket.on(`progress:${currentVideoId}`, (data) => {
+                    if (data.stage === 'result') {
+                        showResult(data.progress);
+                    } else {
+                        updateStageProgress(data.stage, data.status, data.progress);
+                    }
+                });
+
+            } catch (err) {
+                showError(err.message);
+            }
+        });
+    </script>
+</body>
+
+</html>

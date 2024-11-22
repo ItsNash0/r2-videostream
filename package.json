@@ -1,36 +1,32 @@
 {
 	"name": "r2-videostream",
 	"version": "1.0.0",
-	"description": "Video processing service with HLS streaming and Cloudflare R2 storage",
-	"main": "server.js",
+	"description": "Video processing and streaming service using Cloudflare R2",
+	"main": "src/app.js",
 	"scripts": {
-		"start": "node server.js",
-		"dev": "nodemon server.js"
+		"start": "node src/app.js",
+		"dev": "nodemon src/app.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"keywords": [
 		"video",
 		"streaming",
 		"hls",
-		"ffmpeg",
 		"cloudflare",
 		"r2"
 	],
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
-		"@aws-sdk/client-s3": "^3.x",
-		"better-sqlite3": "^11.5.0",
-		"dotenv": "^16.x",
-		"express": "^4.x",
-		"express-fileupload": "^1.5.1",
-		"express-handlebars": "^8.0.1",
-		"express-session": "^1.18.1",
-		"fluent-ffmpeg": "^2.x",
-		"multer": "^1.x",
-		"socket.io": "^4.8.1",
-		"sqlite3": "^5.1.7"
+		"@aws-sdk/client-s3": "^3.0.0",
+		"cors": "^2.8.5",
+		"dotenv": "^16.0.0",
+		"express": "^4.17.1",
+		"fluent-ffmpeg": "^2.1.2",
+		"multer": "^1.4.5-lts.1",
+		"socket.io": "^4.8.1"
 	},
 	"devDependencies": {
-		"nodemon": "^3.1.7"
+		"nodemon": "^2.0.22"
 	}
 }
