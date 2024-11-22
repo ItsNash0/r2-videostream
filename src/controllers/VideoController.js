@@ -3,6 +3,7 @@ const fs = require("fs").promises
 const videoProcessingService = require("../services/VideoProcessingService")
 const storageService = require("../services/StorageService")
 const progressEmitter = require("../services/ProgressEmitter")
+const databaseService = require("../services/DatabaseService")
 const config = require("../config")
 
 class VideoController {
@@ -31,6 +32,12 @@ class VideoController {
 		try {
 			if (!req.file) {
 				return res.status(400).json({ error: "No video file provided" })
+			}
+
+			if (!req.session.user) {
+				return res
+					.status(401)
+					.json({ error: "Authentication required" })
 			}
 
 			videoId = `video_${Date.now()}`
@@ -73,6 +80,14 @@ class VideoController {
 			const masterPlaylistUrl = config.r2.isConfigured
 				? `${publicUrl}/master.m3u8`
 				: `${publicUrl}/master.m3u8`
+
+			// Save video to database
+			const videoTitle = req.file.originalname.replace(/\.[^/.]+$/, "") // Remove extension
+			await databaseService.addVideo(
+				req.session.user.id,
+				videoTitle,
+				masterPlaylistUrl
+			)
 
 			const result = {
 				success: true,

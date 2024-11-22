@@ -1,4 +1,5 @@
 const dotenv = require("dotenv")
+const path = require("path")
 dotenv.config()
 
 const config = {
@@ -21,7 +22,7 @@ const config = {
 		),
 	},
 	video: {
-		maxFileSize: parseInt(process.env.MAX_FILE_SIZE || "500000000", 10), // 500MB default
+		maxFileSize: parseInt(process.env.MAX_FILE_SIZE || "500000000", 10),
 		segmentDuration: parseInt(process.env.SEGMENT_DURATION || "5", 10),
 		resolutions: (process.env.VIDEO_RESOLUTIONS || "1080,720,480,360")
 			.split(",")
@@ -58,7 +59,25 @@ const config = {
 	},
 	paths: {
 		uploads: "uploads/temp",
+		data: path.join(__dirname, "..", "data"),
 	},
+	session: {
+		secret: process.env.SESSION_SECRET || "your-secret-key",
+		name: "sessionId",
+		resave: false,
+		saveUninitialized: false,
+		cookie: {
+			secure: process.env.NODE_ENV === "production",
+			httpOnly: true,
+			maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+		},
+	},
+	clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
 }
+
+// Ensure required directories exist
+;[config.paths.uploads, config.paths.data].forEach((dir) => {
+	require("fs").mkdirSync(dir, { recursive: true })
+})
 
 module.exports = config

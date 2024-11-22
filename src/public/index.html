@@ -5,311 +5,449 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Processor</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .upload-form {
-            margin-bottom: 20px;
-        }
-
-        .progress-container {
-            display: none;
-            margin-top: 20px;
-        }
-
-        .progress-stage {
-            margin-bottom: 15px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress {
-            width: 0%;
-            height: 100%;
-            background-color: #4CAF50;
-            transition: width 0.3s ease;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
-
-        .stage-name {
-            font-weight: bold;
-        }
-
-        .stage-status {
-            color: #666;
-        }
-
-        .result {
-            margin-top: 20px;
-            display: none;
-            padding: 20px;
-            background-color: #f8f8f8;
-            border-radius: 8px;
-        }
-
-        .error {
-            color: #f44336;
-            margin-top: 10px;
-            display: none;
-            padding: 10px;
-            background-color: #fff2f2;
-            border-radius: 4px;
-        }
-
-        button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-
-        .video-container {
-            margin-top: 20px;
-            max-width: 100%;
-        }
-
-        pre {
-            background-color: #f1f1f1;
-            padding: 15px;
-            border-radius: 4px;
-            overflow-x: auto;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .completed {
-            background-color: #4CAF50;
-        }
-
-        .processing {
-            background-color: #2196F3;
-            background-image: linear-gradient(45deg,
-                    rgba(255, 255, 255, .15) 25%,
-                    transparent 25%,
-                    transparent 50%,
-                    rgba(255, 255, 255, .15) 50%,
-                    rgba(255, 255, 255, .15) 75%,
-                    transparent 75%,
-                    transparent);
-            background-size: 1rem 1rem;
-            animation: progress-bar-stripes 1s linear infinite;
-        }
-
-        @keyframes progress-bar-stripes {
-            0% {
-                background-position: 1rem 0;
-            }
-
-            100% {
-                background-position: 0 0;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4F46E5',
+                        secondary: '#6366F1',
+                    }
+                }
             }
         }
-
-        .error .progress {
-            background-color: #f44336;
-        }
-
-        .copy-button {
-            background-color: #2196F3;
-            margin-left: 10px;
-            padding: 5px 10px;
-            font-size: 14px;
-        }
-
-        .url-container {
-            display: flex;
-            align-items: center;
-            margin: 10px 0;
-        }
-
-        .url-text {
-            word-break: break-all;
-            flex: 1;
-        }
-    </style>
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body>
-    <div class="container">
-        <h1>Video Processor</h1>
-        <div class="upload-form">
-            <input type="file" id="videoFile" accept="video/*" />
-            <button id="uploadBtn">Upload Video</button>
+<body class="bg-gray-50 text-gray-900 font-[Inter]">
+    <div class="min-h-screen">
+        <!-- Auth Container -->
+        <div id="authContainer" class="max-w-md mx-auto p-6 space-y-8">
+            <!-- Login Form -->
+            <div id="loginForm" class="bg-white rounded-xl shadow-sm p-8">
+                <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                        <input type="text" id="loginAccountNumber"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Enter your account number">
+                    </div>
+                    <button onclick="login()"
+                        class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors">
+                        Login
+                    </button>
+                    <p class="text-center text-sm text-gray-600">
+                        Don't have an account?
+                        <span onclick="toggleAuth('register')" class="text-primary cursor-pointer hover:underline">
+                            Register here
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="hidden bg-white rounded-xl shadow-sm p-8">
+                <h2 class="text-2xl font-bold text-center mb-6">Register</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" id="registerName"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                            placeholder="Enter your name">
+                    </div>
+                    <button onclick="register()"
+                        class="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 transition-colors">
+                        Register
+                    </button>
+                    <p class="text-center text-sm text-gray-600">
+                        Already have an account?
+                        <span onclick="toggleAuth('login')" class="text-primary cursor-pointer hover:underline">
+                            Login here
+                        </span>
+                    </p>
+                </div>
+            </div>
         </div>
 
-        <div class="progress-container" id="progressContainer">
-            <h3>Processing Status</h3>
-            <div class="progress-stage" id="analysisStage">
-                <div class="progress-label">
-                    <span class="stage-name">Video Analysis</span>
-                    <span class="stage-status">Waiting...</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress"></div>
-                </div>
-            </div>
-            <div class="progress-stage" id="transcodingStage">
-                <div class="progress-label">
-                    <span class="stage-name">Transcoding</span>
-                    <span class="stage-status">Waiting...</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress"></div>
+        <!-- Main Container -->
+        <div id="mainContainer" class="hidden max-w-7xl mx-auto p-6">
+            <!-- User Info -->
+            <div id="userInfo" class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-semibold">Welcome, <span id="userName" class="text-primary"></span></h3>
+                        <p class="text-gray-600">Account: <span id="accountNumber" class="font-mono"></span></p>
+                    </div>
+                    <button onclick="logout()"
+                        class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        Logout
+                    </button>
                 </div>
             </div>
-            <div class="progress-stage" id="playlistStage">
-                <div class="progress-label">
-                    <span class="stage-name">Playlist Generation</span>
-                    <span class="stage-status">Waiting...</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress"></div>
-                </div>
-            </div>
-            <div class="progress-stage" id="uploadStage">
-                <div class="progress-label">
-                    <span class="stage-name">File Upload</span>
-                    <span class="stage-status">Waiting...</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress"></div>
-                </div>
-            </div>
-        </div>
 
-        <div class="error" id="errorContainer"></div>
+            <!-- Upload Section -->
+            <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+                <h2 class="text-2xl font-bold mb-6">Upload Video</h2>
+                <div class="upload-form border-2 border-dashed border-gray-300 rounded-xl p-8 text-center">
+                    <input type="file" id="videoFile" accept="video/*" class="hidden">
+                    <label for="videoFile" class="cursor-pointer">
+                        <div class="space-y-4">
+                            <div class="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-lg font-medium">Drop your video here or click to browse</p>
+                                <p class="text-sm text-gray-500">MP4, MOV, or AVI up to 500MB</p>
+                            </div>
+                        </div>
+                    </label>
+                    <button id="uploadBtn"
+                        class="mt-6 bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">
+                        Upload Video
+                    </button>
+                </div>
+            </div>
 
-        <div class="result" id="resultContainer">
-            <h3>Results</h3>
-            <div>
-                <strong>HLS Playlist URL:</strong>
-                <div class="url-container">
-                    <span id="playlistUrl" class="url-text"></span>
-                    <button class="copy-button" onclick="copyToClipboard('playlistUrl')">Copy</button>
+            <!-- Progress Section -->
+            <div id="progressContainer" class="hidden bg-white rounded-xl shadow-sm p-6 mb-8">
+                <h3 class="text-xl font-bold mb-4">Processing Status</h3>
+                <div class="space-y-6">
+                    <!-- Analysis Stage -->
+                    <div id="analysisStage" class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium">Video Analysis</span>
+                            <span class="text-gray-600">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="progress h-full bg-primary transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Transcoding Stage -->
+                    <div id="transcodingStage" class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium">Transcoding</span>
+                            <span class="text-gray-600">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="progress h-full bg-primary transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Playlist Stage -->
+                    <div id="playlistStage" class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium">Playlist Generation</span>
+                            <span class="text-gray-600">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="progress h-full bg-primary transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Stage -->
+                    <div id="uploadStage" class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium">File Upload</span>
+                            <span class="text-gray-600">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="progress h-full bg-primary transition-all duration-300"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <strong>Embed Code:</strong>
-                <div class="url-container">
-                    <pre id="embedCode"></pre>
-                    <button class="copy-button" onclick="copyToClipboard('embedCode')">Copy</button>
+
+            <!-- Error Display -->
+            <div id="errorContainer" class="hidden bg-red-50 text-red-600 p-4 rounded-xl mb-8"></div>
+
+            <!-- Videos Grid -->
+            <div class="space-y-6">
+                <h2 class="text-2xl font-bold">Your Videos</h2>
+                <div id="videoList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Video cards will be inserted here -->
                 </div>
             </div>
-            <div class="video-container" id="videoContainer"></div>
+
+            <!-- Video Result Template -->
+            <template id="videoCardTemplate">
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <!-- Video Player -->
+                    <div class="aspect-video bg-black">
+                        <video controls class="w-full h-full"></video>
+                    </div>
+
+                    <!-- Video Info -->
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-lg font-semibold"></h3>
+                        <div class="space-y-3">
+                            <!-- Play URL -->
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-gray-700">Play URL</label>
+                                <div class="flex items-center gap-2">
+                                    <input type="text" readonly
+                                        class="flex-1 px-3 py-2 bg-gray-50 rounded-lg text-sm font-mono">
+                                    <button onclick="copyToClipboard(this)"
+                                        class="bg-gray-100 p-2 rounded-lg hover:bg-gray-200 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Embed Code -->
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium text-gray-700">Embed Code</label>
+                                <div class="flex items-start gap-2">
+                                    <pre
+                                        class="flex-1 p-3 bg-gray-50 rounded-lg text-sm font-mono overflow-x-auto"></pre>
+                                    <button onclick="copyToClipboard(this)"
+                                        class="bg-gray-100 p-2 rounded-lg hover:bg-gray-200 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Video Details -->
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-600">Created:</span>
+                                    <span class="font-medium created-at"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Size:</span>
+                                    <span class="font-medium video-size"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Duration:</span>
+                                    <span class="font-medium video-duration"></span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-600">Resolution:</span>
+                                    <span class="font-medium video-resolution"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const uploadBtn = document.getElementById('uploadBtn');
-        const videoFile = document.getElementById('videoFile');
-        const progressContainer = document.getElementById('progressContainer');
-        const resultContainer = document.getElementById('resultContainer');
-        const errorContainer = document.getElementById('errorContainer');
-        const playlistUrl = document.getElementById('playlistUrl');
-        const embedCode = document.getElementById('embedCode');
-        const videoContainer = document.getElementById('videoContainer');
-
-        const stages = ['analysis', 'transcoding', 'playlist', 'upload'];
         let currentVideoId = null;
+        let socket = null;
 
-        async function copyToClipboard(elementId) {
-            const element = document.getElementById(elementId);
-            const text = element.tagName === 'PRE' ? element.textContent : element.innerText;
+        // Copy to clipboard functionality
+        async function copyToClipboard(button) {
+            const container = button.parentElement;
+            const textElement = container.querySelector('input, pre');
+            const text = textElement.tagName === 'PRE' ? textElement.textContent : textElement.value;
 
             try {
                 await navigator.clipboard.writeText(text);
-                const button = element.nextElementSibling;
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = originalText;
-                }, 2000);
+
+                // Show copied tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-2 py-1 rounded text-sm';
+                tooltip.textContent = 'Copied!';
+
+                button.style.position = 'relative';
+                button.appendChild(tooltip);
+
+                setTimeout(() => tooltip.remove(), 2000);
             } catch (err) {
                 console.error('Failed to copy text: ', err);
             }
         }
 
-        function updateStageProgress(stageId, status, progress) {
-            const stage = document.getElementById(`${stageId}Stage`);
-            const progressBar = stage.querySelector('.progress');
-            const statusEl = stage.querySelector('.stage-status');
+        // Auth toggle
+        function toggleAuth(mode) {
+            document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('registerForm').style.display = mode === 'register' ? 'block' : 'none';
+        }
 
-            progressBar.style.width = `${progress}%`;
-            progressBar.className = `progress ${status}`;
-
-            let statusText = 'Waiting...';
-            if (status === 'processing') {
-                statusText = `${progress}%`;
-                progressBar.classList.add('processing');
-            } else if (status === 'completed') {
-                statusText = 'Completed';
-                progressBar.classList.add('completed');
-            } else if (status === 'error') {
-                statusText = 'Error';
-                progressBar.classList.add('error');
+        // Register functionality
+        async function register() {
+            const name = document.getElementById('registerName').value;
+            if (!name) {
+                showError('Name is required');
+                return;
             }
 
-            statusEl.textContent = statusText;
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                alert(`Account created! Your account number is: ${data.user.accountNumber}\nPlease save this number to login.`);
+                toggleAuth('login');
+            } catch (error) {
+                showError(error.message);
+            }
         }
 
-        function resetProgress() {
-            stages.forEach(stage => {
-                updateStageProgress(stage, 'waiting', 0);
-            });
-            progressContainer.style.display = 'block';
-            resultContainer.style.display = 'none';
-            errorContainer.style.display = 'none';
+        // Login functionality
+        async function login() {
+            const accountNumber = document.getElementById('loginAccountNumber').value;
+            if (!accountNumber) {
+                showError('Account number is required');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ accountNumber })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                showMainContainer(data.user);
+                loadUserVideos();
+            } catch (error) {
+                showError(error.message);
+            }
         }
 
+        // Logout functionality
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                document.getElementById('authContainer').style.display = 'block';
+                document.getElementById('mainContainer').style.display = 'none';
+                document.getElementById('loginAccountNumber').value = '';
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Show main container
+        function showMainContainer(user) {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('accountNumber').textContent = user.accountNumber;
+        }
+
+        // Create video card
+        function createVideoCard(video) {
+            const template = document.getElementById('videoCardTemplate');
+            const card = template.content.cloneNode(true);
+
+            // Set video title
+            card.querySelector('h3').textContent = video.title;
+
+            // Set video player source
+            const videoPlayer = card.querySelector('video');
+            videoPlayer.src = video.playlist_url;
+
+            // Set URLs and embed code
+            card.querySelector('input').value = video.playlist_url;
+            card.querySelector('pre').textContent = generateEmbedCode(video.playlist_url);
+
+            // Set video details
+            card.querySelector('.created-at').textContent = new Date(video.created_at).toLocaleDateString();
+
+            // Add to video list
+            document.getElementById('videoList').appendChild(card);
+        }
+
+        // Generate embed code
+        function generateEmbedCode(url) {
+            return `<video id="video" controls style="max-width: 100%; height: auto;">
+    <source src="${url}" type="application/x-mpegURL">
+</video>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"><\/script>
+<script>
+    const video = document.getElementById('video');
+    if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource('${url}');
+        hls.attachMedia(video);
+    }
+<\/script>`;
+        }
+
+        // Load user videos
+        async function loadUserVideos() {
+            try {
+                const response = await fetch('/api/auth/videos', {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                const videoList = document.getElementById('videoList');
+                videoList.innerHTML = '';
+
+                data.videos.forEach(video => createVideoCard(video));
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Error handling
         function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
             errorContainer.textContent = message;
             errorContainer.style.display = 'block';
-            uploadBtn.disabled = false;
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+            }, 5000);
         }
 
-        function showResult(data) {
-            playlistUrl.textContent = data.masterPlaylistUrl;
-            embedCode.textContent = data.embedCode;
-            videoContainer.innerHTML = data.embedCode;
-            resultContainer.style.display = 'block';
-            uploadBtn.disabled = false;
-        }
+        // File upload handling
+        const uploadForm = document.querySelector('.upload-form');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const videoFile = document.getElementById('videoFile');
+        const progressContainer = document.getElementById('progressContainer');
 
+        // Drag and drop handling
+        uploadForm.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadForm.classList.add('border-primary');
+        });
+
+        uploadForm.addEventListener('dragleave', () => {
+            uploadForm.classList.remove('border-primary');
+        });
+
+        uploadForm.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadForm.classList.remove('border-primary');
+
+            if (e.dataTransfer.files.length) {
+                videoFile.files = e.dataTransfer.files;
+            }
+        });
+
+        // Upload functionality
         uploadBtn.addEventListener('click', async () => {
             if (!videoFile.files[0]) {
                 showError('Please select a video file');
@@ -321,10 +459,11 @@
 
             try {
                 uploadBtn.disabled = true;
-                resetProgress();
+                progressContainer.style.display = 'block';
 
                 const response = await fetch('/api/videos/upload', {
                     method: 'POST',
+                    credentials: 'include',
                     body: formData
                 });
 
@@ -337,20 +476,56 @@
                 currentVideoId = data.videoId;
 
                 // Connect to Socket.IO for progress updates
-                const socket = io();
+                socket = io();
 
                 socket.on(`progress:${currentVideoId}`, (data) => {
                     if (data.stage === 'result') {
-                        showResult(data.progress);
+                        createVideoCard(data.progress);
+                        progressContainer.style.display = 'none';
+                        uploadBtn.disabled = false;
                     } else {
-                        updateStageProgress(data.stage, data.status, data.progress);
+                        updateProgress(data.stage, data.status, data.progress);
                     }
                 });
 
             } catch (err) {
                 showError(err.message);
+                uploadBtn.disabled = false;
+                progressContainer.style.display = 'none';
             }
         });
+
+        // Update progress bars
+        function updateProgress(stage, status, progress) {
+            const stageElement = document.getElementById(`${stage}Stage`);
+            const progressBar = stageElement.querySelector('.progress');
+            const statusText = stageElement.querySelector('.text-gray-600');
+
+            progressBar.style.width = `${progress}%`;
+
+            if (status === 'processing') {
+                statusText.textContent = `${progress}%`;
+                progressBar.classList.add('animate-pulse');
+            } else if (status === 'completed') {
+                statusText.textContent = 'Completed';
+                progressBar.classList.remove('animate-pulse');
+            } else if (status === 'error') {
+                statusText.textContent = 'Error';
+                progressBar.classList.remove('animate-pulse');
+                progressBar.classList.add('bg-red-500');
+            }
+        }
+
+        // Check if user is already logged in
+        fetch('/api/auth/me', { credentials: 'include' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMainContainer(data.user);
+                    loadUserVideos();
+                }
+            })
+            .catch(console.error);
     </script>
 </body>
 
