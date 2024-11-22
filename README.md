@@ -2,6 +2,8 @@
 
 A Node.js application that processes uploaded videos into HLS streams with multiple resolutions and stores them in Cloudflare R2. Features user authentication and real-time processing status tracking.
 
+![Screenshot of the Video Management Dashboard](./screenshot.png)
+
 ## Features
 
 - Simple username authentication
