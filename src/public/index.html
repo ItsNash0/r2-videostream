@@ -1,103 +1,263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Processor</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes progress-loading {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .animate-loading {
+            animation: progress-loading 1.5s infinite;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-50">
-    <div class="max-w-7xl mx-auto p-6">
-        <!-- Auth Section -->
-        <div id="authContainer" class="max-w-md mx-auto">
-            <div class="bg-white rounded-lg shadow p-6">
-                <input type="text" id="loginAccountNumber" placeholder="Enter Account Number"
-                    class="w-full p-2 border rounded mb-4">
-                <button onclick="login()" class="w-full bg-blue-500 text-white p-2 rounded">Login</button>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div id="mainContainer" class="hidden">
-            <!-- User Info -->
-            <div class="bg-white rounded-lg shadow p-4 mb-6 flex justify-between items-center">
-                <div>
-                    <span id="userName" class="font-bold"></span>
-                    <span class="text-gray-500 ml-2" id="accountNumber"></span>
+<body class="h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-full">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Video Processor</h1>
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <!-- Sun icon -->
+                        <svg class="w-6 h-6 hidden dark:block text-gray-200" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <!-- Moon icon -->
+                        <svg class="w-6 h-6 block dark:hidden text-gray-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                        </svg>
+                    </button>
                 </div>
-                <button onclick="logout()" class="bg-red-500 text-white px-4 py-2 rounded">Logout</button>
             </div>
+        </header>
 
-            <!-- Upload Section -->
-            <div class="bg-white rounded-lg shadow p-6 mb-6">
-                <input type="file" id="videoFile" accept="video/*" class="mb-4">
-                <button id="uploadBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Upload</button>
-            </div>
-
-            <!-- Progress Section -->
-            <div id="progressContainer" class="hidden bg-white rounded-lg shadow p-6 mb-6">
-                <h3 class="font-bold mb-4">Processing Status</h3>
-
-                <!-- Analysis Progress -->
-                <div class="mb-4">
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Analysis</span>
-                        <span id="analysisStatus">Waiting...</span>
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Auth Section -->
+            <div id="authContainer" class="max-w-md mx-auto">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 space-y-6">
+                    <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white">Welcome Back</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Account
+                                Number</label>
+                            <input type="text" id="loginAccountNumber"
+                                class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
+                                placeholder="Enter your account number">
+                        </div>
+                        <button onclick="login()"
+                            class="w-full bg-primary-600 hover:bg-primary-700 text-white py-2 px-4 rounded-lg transition-colors duration-200">
+                            Login
+                        </button>
                     </div>
-                    <div class="h-2 bg-gray-100 rounded-full">
-                        <div id="analysisProgress" class="h-full bg-blue-500 rounded-full w-0"></div>
-                    </div>
-                </div>
-
-                <!-- Transcoding Progress -->
-                <div class="mb-4">
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Transcoding</span>
-                        <span id="transcodingStatus">Waiting...</span>
-                    </div>
-                    <div class="h-2 bg-gray-100 rounded-full">
-                        <div id="transcodingProgress" class="h-full bg-blue-500 rounded-full w-0"></div>
-                    </div>
-                </div>
-
-                <!-- Upload Progress -->
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
-                        <span>Upload</span>
-                        <span id="uploadStatus">Waiting...</span>
-                    </div>
-                    <div class="h-2 bg-gray-100 rounded-full">
-                        <div id="uploadProgress" class="h-full bg-blue-500 rounded-full w-0"></div>
-                    </div>
-                    <div id="uploadDetails" class="mt-2 text-sm text-gray-500"></div>
                 </div>
             </div>
 
-            <!-- Videos Grid -->
-            <div id="videoList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-        </div>
+            <!-- Main Content -->
+            <div id="mainContainer" class="hidden space-y-8">
+                <!-- User Info -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                                Welcome, <span id="userName" class="text-primary-600 dark:text-primary-400"></span>
+                            </h2>
+                            <p class="text-gray-600 dark:text-gray-400">
+                                Account: <span id="accountNumber" class="font-mono"></span>
+                            </p>
+                        </div>
+                        <button onclick="logout()"
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors duration-200">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+                    <div
+                        class="upload-zone border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-primary-500 dark:hover:border-primary-400 transition-colors duration-200">
+                        <input type="file" id="videoFile" accept="video/*" class="hidden">
+                        <label for="videoFile" class="cursor-pointer">
+                            <div class="space-y-4">
+                                <div
+                                    class="mx-auto w-16 h-16 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
+                                    <svg class="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-lg font-medium text-gray-900 dark:text-white">Drop your video here or
+                                        click to browse</p>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">MP4, MOV, or AVI up to 500MB</p>
+                                </div>
+                            </div>
+                        </label>
+                        <button id="uploadBtn"
+                            class="mt-6 bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg transition-colors duration-200">
+                            Upload Video
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Section -->
+                <div id="progressContainer" class="hidden bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 space-y-6">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Processing Status</h3>
+
+                    <!-- Analysis Progress -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium text-gray-900 dark:text-white">Analysis</span>
+                            <span id="analysisStatus" class="text-gray-500 dark:text-gray-400">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div id="analysisProgress" class="h-full bg-primary-600 rounded-full w-0 relative">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-loading">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transcoding Progress -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium text-gray-900 dark:text-white">Transcoding</span>
+                            <span id="transcodingStatus" class="text-gray-500 dark:text-gray-400">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div id="transcodingProgress" class="h-full bg-primary-600 rounded-full w-0 relative">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-loading">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Progress -->
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="font-medium text-gray-900 dark:text-white">Upload</span>
+                            <span id="uploadStatus" class="text-gray-500 dark:text-gray-400">Waiting...</span>
+                        </div>
+                        <div class="h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div id="uploadProgress" class="h-full bg-primary-600 rounded-full w-0 relative">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-loading">
+                                </div>
+                            </div>
+                        </div>
+                        <div id="uploadDetails" class="text-sm text-gray-500 dark:text-gray-400"></div>
+                    </div>
+                </div>
+
+                <!-- Videos Grid -->
+                <div class="space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Your Videos</h2>
+                    <div id="videoList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <!-- Video Card Template -->
     <template id="videoTemplate">
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <video controls class="w-full aspect-video"></video>
-            <div class="p-4">
-                <h3 class="font-bold mb-2"></h3>
-                <div class="space-y-2 text-sm">
+        <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden group hover:ring-2 hover:ring-primary-500 transition-all duration-200">
+            <div class="aspect-video bg-black relative group">
+                <video controls class="w-full h-full"></video>
+                <div
+                    class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div class="space-x-4">
+                        <button
+                            class="play-btn bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            </svg>
+                        </button>
+                        <button
+                            class="fullscreen-btn bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-colors duration-200">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 space-y-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white"></h3>
+                <div class="space-y-4">
                     <div>
-                        <div class="font-medium">Play URL</div>
-                        <div class="flex gap-2">
-                            <input readonly class="flex-1 p-1 bg-gray-50 rounded">
-                            <button onclick="copy(this)" class="px-2 bg-gray-100 rounded">Copy</button>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Play URL</label>
+                        <div class="mt-1 flex rounded-md shadow-sm">
+                            <input readonly
+                                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                            <button onclick="copy(this)"
+                                class="inline-flex items-center px-3 py-2 border border-l-0 border-gray-300 dark:border-gray-600 rounded-r-md bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
                     <div>
-                        <div class="font-medium">Embed Code</div>
-                        <div class="flex gap-2">
-                            <pre class="flex-1 p-1 bg-gray-50 rounded overflow-x-auto"></pre>
-                            <button onclick="copy(this)" class="px-2 bg-gray-100 rounded">Copy</button>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Embed Code</label>
+                        <div class="mt-1">
+                            <div class="relative">
+                                <pre
+                                    class="p-3 bg-gray-50 dark:bg-gray-700 rounded-md text-sm font-mono text-gray-900 dark:text-white overflow-x-auto"></pre>
+                                <button onclick="copy(this)"
+                                    class="absolute top-2 right-2 p-2 bg-gray-100 dark:bg-gray-600 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors duration-200">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -107,6 +267,17 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // Theme Toggle
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+
+        // Set initial theme
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
         // Auth Functions
         async function login() {
             const accountNumber = document.getElementById('loginAccountNumber').value;
@@ -131,6 +302,7 @@
             await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
             document.getElementById('authContainer').style.display = 'block';
             document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('loginAccountNumber').value = '';
         }
 
         // UI Functions
@@ -151,7 +323,7 @@
 
                 const details = document.getElementById('uploadDetails');
                 if (data.currentFile) {
-                    details.textContent = `Uploading: ${data.currentFile.name} (${data.uploadedFiles}/${data.totalFiles})`;
+                    details.textContent = `${data.status === 'uploading' ? 'Uploading to R2' : 'Copying'}: ${data.currentFile.name} (${data.uploadedFiles || data.copiedFiles}/${data.totalFiles})`;
                 }
             } else {
                 progressBar.style.width = `${data}%`;
@@ -172,10 +344,19 @@
             const template = document.getElementById('videoTemplate');
             const card = template.content.cloneNode(true);
 
-            card.querySelector('video').src = video.playlist_url;
+            const videoPlayer = card.querySelector('video');
+            videoPlayer.src = video.playlist_url;
+
             card.querySelector('h3').textContent = video.title;
             card.querySelector('input').value = video.playlist_url;
             card.querySelector('pre').textContent = generateEmbed(video.playlist_url);
+
+            // Add video controls
+            const playBtn = card.querySelector('.play-btn');
+            playBtn.onclick = () => videoPlayer.paused ? videoPlayer.play() : videoPlayer.pause();
+
+            const fullscreenBtn = card.querySelector('.fullscreen-btn');
+            fullscreenBtn.onclick = () => videoPlayer.requestFullscreen();
 
             document.getElementById('videoList').appendChild(card);
         }
@@ -186,40 +367,98 @@
         }
 
         async function copy(button) {
-            const container = button.parentElement;
-            const text = container.querySelector('input, pre').value || container.querySelector('pre').textContent;
+            const container = button.closest('div');
+            const text = container.querySelector('input, pre')?.value || container.querySelector('pre')?.textContent;
+
             await navigator.clipboard.writeText(text);
-            button.textContent = 'Copied!';
-            setTimeout(() => button.textContent = 'Copy', 2000);
+
+            // Show copied tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-2 py-1 rounded text-sm';
+            tooltip.textContent = 'Copied!';
+
+            button.style.position = 'relative';
+            button.appendChild(tooltip);
+
+            setTimeout(() => tooltip.remove(), 2000);
         }
 
         // Upload Handler
-        document.getElementById('uploadBtn').addEventListener('click', async () => {
-            const file = document.getElementById('videoFile').files[0];
+        const uploadZone = document.querySelector('.upload-zone');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const videoFile = document.getElementById('videoFile');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            uploadZone.classList.add('border-primary-500', 'dark:border-primary-400');
+        }
+
+        function unhighlight(e) {
+            uploadZone.classList.remove('border-primary-500', 'dark:border-primary-400');
+        }
+
+        uploadZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            videoFile.files = files;
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            const file = videoFile.files[0];
             if (!file) return;
 
             const formData = new FormData();
             formData.append('video', file);
 
             document.getElementById('progressContainer').style.display = 'block';
+            uploadBtn.disabled = true;
 
-            const response = await fetch('/api/videos/upload', {
-                method: 'POST',
-                credentials: 'include',
-                body: formData
-            });
+            try {
+                const response = await fetch('/api/videos/upload', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
 
-            const data = await response.json();
-            const socket = io();
-
-            socket.on(`progress:${data.videoId}`, (data) => {
-                if (data.stage === 'result') {
-                    createVideoCard(data.progress);
-                    document.getElementById('progressContainer').style.display = 'none';
-                } else {
-                    updateProgress(data.stage, data.progress);
+                if (!response.ok) {
+                    throw new Error('Upload failed');
                 }
-            });
+
+                const data = await response.json();
+                const socket = io();
+
+                socket.on(`progress:${data.videoId}`, (data) => {
+                    if (data.stage === 'result') {
+                        createVideoCard(data.progress);
+                        document.getElementById('progressContainer').style.display = 'none';
+                        uploadBtn.disabled = false;
+                        videoFile.value = '';
+                    } else {
+                        updateProgress(data.stage, data.progress);
+                    }
+                });
+            } catch (error) {
+                console.error(error);
+                uploadBtn.disabled = false;
+            }
         });
 
         // Check Auth Status
